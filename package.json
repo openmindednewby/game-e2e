@@ -15,7 +15,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/openmindednewby/game-e2e.git"
+    "url": "git+https://github.com/openmindednewby/game-e2e.git"
   },
   "homepage": "https://github.com/openmindednewby/game-e2e#readme",
   "bugs": {
