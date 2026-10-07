@@ -1,26 +1,54 @@
 {
   "name": "@dloizides/game-e2e",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Playwright helpers shared by the EisaiPollis browser games: phone/desktop device projects, a simulated browser-toolbar visible height, game-shell fit assertions, DOM control boxes and overlap math, exact or tolerant PNG pixel/region diff, and the 44x44 touch-target and no-horizontal-scroll mobile gates. Extracted from Aurora, Surge and Morphe.",
-  "keywords": ["playwright", "e2e", "game", "mobile-first", "pixel-diff", "touch-targets", "eisaipollis"],
+  "keywords": [
+    "playwright",
+    "e2e",
+    "game",
+    "mobile-first",
+    "pixel-diff",
+    "touch-targets",
+    "eisaipollis"
+  ],
   "author": "dloizides",
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/openmindednewby/game-e2e.git" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openmindednewby/game-e2e.git"
+  },
   "homepage": "https://github.com/openmindednewby/game-e2e#readme",
-  "bugs": { "url": "https://github.com/openmindednewby/game-e2e/issues" },
+  "bugs": {
+    "url": "https://github.com/openmindednewby/game-e2e/issues"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "require": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-      "import": { "types": "./dist/index.d.mts", "default": "./dist/index.mjs" },
-      "default": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "default": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     }
   },
-  "files": ["dist", "README.md", "CHANGELOG.md"],
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "sideEffects": false,
-  "engines": { "node": ">=18.0.0" },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build": "rimraf dist && tsup",
     "test": "jest",
@@ -32,7 +60,9 @@
     "security:audit": "npm audit --audit-level=high",
     "prepublishOnly": "npm run clean && npm run build && npm run test"
   },
-  "peerDependencies": { "@playwright/test": ">=1.57.0" },
+  "peerDependencies": {
+    "@playwright/test": ">=1.57.0"
+  },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
     "@types/jest": "^29.5.0",
