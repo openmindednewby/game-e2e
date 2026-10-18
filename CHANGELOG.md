@@ -2,6 +2,20 @@
 
 All notable changes to `@dloizides/game-e2e` are documented here.
 
+## 1.2.0
+
+NAV-1 "Every game menu works with arrow keys and controller", walker gap:
+
+- The walker now finds pointer-only items whose click / pointerdown / pointerup handler is set as a property
+  (`el.onclick = ...`) or added with `addEventListener`, not only the `[onclick]` attribute. A visible element
+  with such a handler that is not focusable is reported `unreached`.
+- Listeners are read through CDP `DOMDebugger.getEventListeners` (Chromium). Without CDP (Firefox, WebKit) only
+  the attribute and properties are checked, and each result carries a `notes` line saying so.
+- Delegation: an element that contains a walk control, or sits inside one, is never flagged, so a listener on a
+  menu container does not flag the container or its children. When nested elements are both flagged, only the
+  innermost is reported.
+- `WalkResult.notes` (new, printed as `note:` by `renderWalk`).
+
 ## 1.1.0
 
 NAV-1 "Every game menu works with arrow keys and controller", phase 1:

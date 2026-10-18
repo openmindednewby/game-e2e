@@ -1,7 +1,8 @@
-import type { Page } from '@playwright/test';
+import type { CDPSession, Page } from '@playwright/test';
 import { DIALOG_SELECTOR, MENU_FOCUSABLE_SELECTOR, STANDARD_BUTTON } from '@dloizides/game-input';
 import { controlName } from './boxes';
 import { type PadDriver, stubGamepad } from './gamepad-stub';
+import { openCdp, pointerOnlyControls } from './menu-walk-listeners';
 import { activeWalkId, controlValue, focusWalkId, rootOpen, scanScreen, type WalkScan } from './menu-walk-page';
 import { WALK_INPUTS, type WalkInput, type WalkResult, renderWalk, walkFailed } from './menu-walk-report';
 
@@ -17,9 +18,11 @@ export interface WalkOptions { via?: readonly WalkInput[] }
 
 type Dir = 'up' | 'down' | 'left' | 'right';
 interface Driver { dir(d: Dir): Promise<void>; back(): Promise<void> }
+interface WalkEnv { pad: PadDriver | null; cdp: CDPSession | null }
 
 const WALK_ATTR = 'data-walk-id';
 const ROOT_ATTR = 'data-walk-root';
+const PROBE_ATTR = 'data-walk-probe';
 const PRESSES_PER_CONTROL = 4;
 const DIRS: readonly Dir[] = ['up', 'down', 'left', 'right'];
 const KEYS: Record<Dir, string> = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' };
@@ -74,12 +77,13 @@ async function sliderProblems(page: Page, driver: Driver, scan: WalkScan, reache
   return problems;
 }
 
-async function walkScreen(page: Page, screen: WalkScreen, via: WalkInput, pad: PadDriver | null): Promise<WalkResult> {
-  const driver = driverFor(page, via, pad);
+async function walkScreen(page: Page, screen: WalkScreen, via: WalkInput, env: WalkEnv): Promise<WalkResult> {
+  const driver = driverFor(page, via, env.pad);
   const exempt = screen.exempt ?? [];
   await screen.open(page);
   const scan = await page.evaluate(scanScreen, { focusSel: MENU_FOCUSABLE_SELECTOR, dialogSel: DIALOG_SELECTOR, exempt: exempt.map((e) => e.selector), attr: WALK_ATTR, rootAttr: ROOT_ATTR });
-  const names = scan.identities.map(controlName);
+  const pointerOnly = await pointerOnlyControls(page, env.cdp, { attr: WALK_ATTR, rootAttr: ROOT_ATTR, probeAttr: PROBE_ATTR, exempt: exempt.map((e) => e.selector) }, scan.identities.length);
+  const names = [...scan.identities, ...pointerOnly.identities].map(controlName);
   const reached = await bfs(page, driver, names.length);
   const problems = scan.isDialog && !scan.focusedInRoot ? ['focus is not inside the dialog when it opens'] : [];
   problems.push(...await sliderProblems(page, driver, scan, reached, names));
@@ -89,16 +93,16 @@ async function walkScreen(page: Page, screen: WalkScreen, via: WalkInput, pad: P
     await driver.back();
     if (await page.evaluate(rootOpen, ROOT_ATTR)) {problems.push(`${via === WALK_INPUTS.pad ? 'B' : 'Escape'} does not close the dialog`);}
   }
-  return { screen: screen.name, via, reached: reached.size, total: names.length, unreached: names.filter((_, i) => !reached.has(i)), problems, exempt: exempt.map((e) => `${e.selector}: ${e.reason}`) };
+  return { screen: screen.name, via, reached: reached.size, total: names.length, unreached: names.filter((_, i) => !reached.has(i)), problems, exempt: exempt.map((e) => `${e.selector}: ${e.reason}`), notes: pointerOnly.notes };
 }
 
 /** Walks every screen by arrow keys and by a stubbed pad (default both) and returns one result per screen and input. */
 export async function walkMenus(page: Page, screens: readonly WalkScreen[], options: WalkOptions = {}): Promise<WalkResult[]> {
   const via = options.via ?? [WALK_INPUTS.keys, WALK_INPUTS.pad];
-  const pad = via.includes(WALK_INPUTS.pad) ? await stubGamepad(page) : null;
+  const env: WalkEnv = { pad: via.includes(WALK_INPUTS.pad) ? await stubGamepad(page) : null, cdp: await openCdp(page) };
   const results: WalkResult[] = [];
   for (const screen of screens) {
-    for (const v of via) {results.push(await walkScreen(page, screen, v, pad));}
+    for (const v of via) {results.push(await walkScreen(page, screen, v, env));}
   }
   return results;
 }

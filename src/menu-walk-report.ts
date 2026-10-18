@@ -9,6 +9,7 @@ export interface WalkResult {
   unreached: string[];
   problems: string[];
   exempt: string[];
+  notes: string[];
 }
 
 export const walkFailed = (r: WalkResult): boolean => r.unreached.length > 0 || r.problems.length > 0;
@@ -20,5 +21,6 @@ export function renderWalk(results: readonly WalkResult[]): string {
     ...r.unreached.map((n) => `  unreached: ${n}`),
     ...r.problems.map((p) => `  problem: ${p}`),
     ...r.exempt.map((e) => `  exempt: ${e}`),
+    ...r.notes.map((n) => `  note: ${n}`),
   ].join('\n')).join('\n');
 }
