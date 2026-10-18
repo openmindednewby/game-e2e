@@ -2,6 +2,18 @@
 
 All notable changes to `@dloizides/game-e2e` are documented here.
 
+## 1.1.0
+
+NAV-1 "Every game menu works with arrow keys and controller", phase 1:
+
+- `walkMenus()` / `expectMenuWalkable()`: open each screen, walk every focusable control by arrow keys and
+  by a stubbed gamepad (breadth-first from the focused control), report unreached controls, a dialog that
+  opens without focus inside it, sliders that ignore Left/Right, and Escape / B that does not close a dialog.
+  Exemptions take a selector and a printed reason.
+- `stubGamepad()`: a `navigator.getGamepads()` stand-in driven from the test (`PadDriver.press`).
+- `renderWalk()`, `walkFailed()`, `WALK_INPUTS`.
+- Depends on `@dloizides/game-input` ^1.5.1 for the shared focusable and dialog selectors.
+
 ## 1.0.0
 
 First release. Playwright helpers that Aurora, Surge and Morphe each carried a copy of, unified on the

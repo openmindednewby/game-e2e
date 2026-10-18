@@ -18,3 +18,9 @@ export { auditTouchTargets, auditRoute, expectTouchTargetsAcrossRoutes, expectTo
 export { toOverflowReading, renderOverflow, summariseOverflow } from './overflow-report';
 export type { OverflowMetrics, OverflowReading, RouteOverflow } from './overflow-report';
 export { readHorizontalOverflow, measureHorizontalOverflow, horizontalOverflowPx, expectNoHorizontalOverflowAcrossRoutes, expectNoHorizontalOverflow } from './overflow';
+export { expectMenuWalkable, walkMenus } from './menu-walk';
+export type { WalkScreen, WalkOptions } from './menu-walk';
+export { WALK_INPUTS, renderWalk, walkFailed } from './menu-walk-report';
+export type { WalkInput, WalkResult } from './menu-walk-report';
+export { STUB_FRAMES, stubGamepad } from './gamepad-stub';
+export type { PadDriver } from './gamepad-stub';
