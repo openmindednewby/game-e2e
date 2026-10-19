@@ -1,7 +1,8 @@
 import type { CDPSession, Page } from '@playwright/test';
-import { DIALOG_SELECTOR, MENU_FOCUSABLE_SELECTOR, STANDARD_BUTTON } from '@dloizides/game-input';
+import { DIALOG_SELECTOR, MENU_FOCUSABLE_SELECTOR } from '@dloizides/game-input';
 import { controlName } from './boxes';
 import { type PadDriver, stubGamepad } from './gamepad-stub';
+import { DIRS, type Driver, driverFor } from './menu-walk-driver';
 import { openCdp, pointerOnlyControls } from './menu-walk-listeners';
 import { activeWalkId, controlValue, focusWalkId, rootOpen, scanScreen, type WalkScan } from './menu-walk-page';
 import { WALK_INPUTS, type WalkInput, type WalkResult, renderWalk, walkFailed } from './menu-walk-report';
@@ -16,22 +17,12 @@ export interface WalkScreen {
 
 export interface WalkOptions { via?: readonly WalkInput[] }
 
-type Dir = 'up' | 'down' | 'left' | 'right';
-interface Driver { dir(d: Dir): Promise<void>; back(): Promise<void> }
 interface WalkEnv { pad: PadDriver | null; cdp: CDPSession | null }
 
 const WALK_ATTR = 'data-walk-id';
 const ROOT_ATTR = 'data-walk-root';
 const PROBE_ATTR = 'data-walk-probe';
 const PRESSES_PER_CONTROL = 4;
-const DIRS: readonly Dir[] = ['up', 'down', 'left', 'right'];
-const KEYS: Record<Dir, string> = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' };
-const PAD_BUTTONS: Record<Dir, number> = { up: STANDARD_BUTTON.dpadUp, down: STANDARD_BUTTON.dpadDown, left: STANDARD_BUTTON.dpadLeft, right: STANDARD_BUTTON.dpadRight };
-
-function driverFor(page: Page, via: WalkInput, pad: PadDriver | null): Driver {
-  if (via === WALK_INPUTS.pad && pad !== null) {return { dir: (d) => pad.press(PAD_BUTTONS[d]), back: () => pad.press(STANDARD_BUTTON.east) };}
-  return { dir: (d) => page.keyboard.press(KEYS[d]), back: () => page.keyboard.press('Escape') };
-}
 
 const active = (page: Page): Promise<number | null> => page.evaluate(activeWalkId, WALK_ATTR);
 const focusId = (page: Page, id: number): Promise<void> => page.evaluate(focusWalkId, [WALK_ATTR, id] as const);

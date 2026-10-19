@@ -78,6 +78,6 @@
     "typescript": "^5.4.0"
   },
   "dependencies": {
-    "@dloizides/game-input": "^1.5.1"
+    "@dloizides/game-input": "^1.6.0"
   }
 }

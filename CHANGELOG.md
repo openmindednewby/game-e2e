@@ -2,6 +2,17 @@
 
 All notable changes to `@dloizides/game-e2e` are documented here.
 
+## 1.3.0
+
+NAV-1 "Every game menu works with arrow keys and controller", phase 4 (canvas menus):
+
+- `expectHookMenuWalkable(page, { screens, open, via?, sizes? })` / `walkHookMenus`: walks menus drawn on a canvas
+  (Phaser, Babylon GUI) through the `window.__menuWalk` hook (`MenuWalkHook` from `@dloizides/game-input` 1.6.0).
+  Per screen, at phone (360x640) and desktop (1280x720) viewports, by arrow keys and the stubbed pad: learns every
+  focus transition until no direction is left untried, fails naming each unreached item. `activates: { item, to }`
+  checks Enter / A opens a screen; Escape / B must leave the screen unless `leaves: false`.
+- Arrow/pad driver moved to `menu-walk-driver.ts`, shared by the DOM and hook walkers (adds Enter / A `activate`).
+
 ## 1.2.1
 
 - Listener lookup is one `Runtime.evaluate` (DevTools `getEventListeners`) instead of two CDP calls per element. The

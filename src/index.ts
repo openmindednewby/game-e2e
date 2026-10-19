@@ -24,3 +24,5 @@ export { WALK_INPUTS, renderWalk, walkFailed } from './menu-walk-report';
 export type { WalkInput, WalkResult } from './menu-walk-report';
 export { STUB_FRAMES, stubGamepad } from './gamepad-stub';
 export type { PadDriver } from './gamepad-stub';
+export { HOOK_WALK_SIZES, expectHookMenuWalkable, walkHookMenus } from './menu-walk-hook';
+export type { HookScreen, HookWalkOptions } from './menu-walk-hook';
