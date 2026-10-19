@@ -38,22 +38,16 @@ export async function openCdp(page: Page): Promise<CDPSession | null> {
   }
 }
 
-async function listenerProbes(cdp: CDPSession, probeAttr: string, count: number): Promise<number[]> {
-  const hits: number[] = [];
-  for (let i = 0; i < count; i += 1) {
-    const { result } = await cdp.send('Runtime.evaluate', { expression: `document.querySelector('[${probeAttr}="${i}"]')` });
-    if (result.objectId === undefined) {continue;}
-    const { listeners } = await cdp.send('DOMDebugger.getEventListeners', { objectId: result.objectId });
-    if (listeners.some((l) => POINTER_EVENTS.includes(l.type))) {hits.push(i);}
-    await cdp.send('Runtime.releaseObject', { objectId: result.objectId });
-  }
-  return hits;
+async function listenerProbes(cdp: CDPSession, probeAttr: string): Promise<number[]> {
+  const expression = `Array.from(document.querySelectorAll('[${probeAttr}]')).filter((el) => ${JSON.stringify(POINTER_EVENTS)}.some((t) => (getEventListeners(el)[t] ?? []).length > 0)).map((el) => Number(el.getAttribute('${probeAttr}')))`;
+  const { result } = await cdp.send('Runtime.evaluate', { expression, includeCommandLineAPI: true, returnByValue: true });
+  return Array.isArray(result.value) ? (result.value as number[]) : [];
 }
 
 /** Adds pointer-only items (handler property or listener, not focusable) as walk controls numbered from `start`. */
 export async function pointerOnlyControls(page: Page, cdp: CDPSession | null, args: ProbeArgs, start: number): Promise<PointerOnly> {
   const marks = await page.evaluate(markProbes, args);
-  const viaListener = cdp === null ? [] : await listenerProbes(cdp, args.probeAttr, marks.probes);
+  const viaListener = cdp === null || marks.probes === 0 ? [] : await listenerProbes(cdp, args.probeAttr);
   const ids = [...new Set([...marks.withProperty, ...viaListener])];
   const identities = await page.evaluate(flagProbes, [args.attr, args.probeAttr, ids, start] as const);
   return { identities, notes: cdp === null ? [NO_CDP_NOTE] : [] };

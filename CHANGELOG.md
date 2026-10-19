@@ -2,6 +2,11 @@
 
 All notable changes to `@dloizides/game-e2e` are documented here.
 
+## 1.2.1
+
+- Listener lookup is one `Runtime.evaluate` (DevTools `getEventListeners`) instead of two CDP calls per element. The
+  per-element calls slowed the walk enough that a screen re-rendering on a late fetch (Surge `stagePreview`) went red.
+
 ## 1.2.0
 
 NAV-1 "Every game menu works with arrow keys and controller", walker gap:
