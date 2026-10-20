@@ -1,7 +1,7 @@
 import { buildSync } from 'esbuild';
 import { type Browser, chromium, type Page } from '@playwright/test';
 import { STANDARD_BUTTON } from '@dloizides/game-input';
-import { stubGamepad, type PadDriver } from './gamepad-stub';
+import { IDLE_RELEASE_FRAMES, stubGamepad, type PadDriver } from './gamepad-stub';
 
 const FIXTURE_URL = 'http://pad-stub.test/';
 const SLOW_FRAME_MS = 450;
@@ -15,19 +15,20 @@ const engine = buildSync({
   write: false,
 }).outputFiles?.[0]?.text ?? '';
 
-const fixture = (poll: boolean, slowMs: number): string => `<!doctype html><html><body><script>${engine}</script><script>
+const fixture = (poll: boolean, slowMs: number, readOnce = false): string => `<!doctype html><html><body><script>${engine}</script><script>
   window.actions = [];
   window.frames = 0;
   const tick = () => { window.frames += 1; const end = performance.now() + ${slowMs}; while (performance.now() < end) {} requestAnimationFrame(tick); };
   requestAnimationFrame(tick);
+  if (${readOnce}) requestAnimationFrame(() => navigator.getGamepads());
   if (${poll}) GI.createGamepadPoller({ getPads: () => navigator.getGamepads(), requestFrame: (cb) => requestAnimationFrame(cb), cancelFrame: (id) => cancelAnimationFrame(id), onAction: (a) => window.actions.push(a) }).start();
 </script></body></html>`;
 
 let browser: Browser;
 
-async function stubbedPage(poll: boolean, slowMs = 0): Promise<{ page: Page; pad: PadDriver }> {
+async function stubbedPage(poll: boolean, slowMs = 0, readOnce = false): Promise<{ page: Page; pad: PadDriver }> {
   const page = await (await browser.newContext()).newPage();
-  await page.route(FIXTURE_URL, (route) => route.fulfill({ contentType: 'text/html', body: fixture(poll, slowMs) }));
+  await page.route(FIXTURE_URL, (route) => route.fulfill({ contentType: 'text/html', body: fixture(poll, slowMs, readOnce) }));
   const pad = await stubGamepad(page);
   await page.goto(FIXTURE_URL);
   return { page, pad };
@@ -81,5 +82,24 @@ describe('stubGamepad press', () => {
     await pad.press(STANDARD_BUTTON.south);
 
     expect((await pageState(page)).pressed).toBe(false);
+  });
+
+  it('with no reader polling the pad, releases after the idle frame budget instead of the wait cap', async () => {
+    const { page, pad } = await stubbedPage(false);
+    const before = (await pageState(page)).frames;
+
+    await pad.press(STANDARD_BUTTON.south);
+
+    expect((await pageState(page)).frames - before).toBeLessThanOrEqual(IDLE_RELEASE_FRAMES + IDLE_FRAME_BUDGET);
+  });
+
+  it('with a reader that samples once and stops, releases after the idle frame budget', async () => {
+    const { page, pad } = await stubbedPage(false, 0, true);
+    const before = (await pageState(page)).frames;
+
+    await pad.press(STANDARD_BUTTON.south);
+
+    const after = await pageState(page);
+    expect([after.pressed, after.frames - before <= IDLE_RELEASE_FRAMES + IDLE_FRAME_BUDGET]).toEqual([false, true]);
   });
 });
