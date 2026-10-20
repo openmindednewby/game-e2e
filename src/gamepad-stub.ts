@@ -6,42 +6,63 @@ export interface PadDriver {
 }
 
 interface StubPad { buttons: Array<{ pressed: boolean; value: number }>; axes: number[] }
+interface PressLatch { button: number; frame: number | null; released: boolean }
+interface StubWindow { __navPad: StubPad; __navPress: PressLatch }
 
-export const STUB_FRAMES = 3;
+export const STUB_FRAMES = 1;
+export const PRESS_WAIT_FRAMES = 240;
 const STANDARD_BUTTON_COUNT = 17;
 const AXIS_COUNT = 4;
 
+function installStub([buttons, axes]: readonly [number, number]): void {
+  const pad = { id: 'nav-walk-stub', index: 0, connected: true, mapping: 'standard', timestamp: 0, axes: new Array<number>(axes).fill(0), buttons: Array.from({ length: buttons }, () => ({ pressed: false, touched: false, value: 0 })) };
+  const latch: PressLatch = { button: -1, frame: null, released: true };
+  const sample = (): Array<typeof pad | null> => {
+    const now = document.timeline.currentTime;
+    const held = pad.buttons[latch.button];
+    if (held !== undefined && latch.frame === null) {latch.frame = typeof now === 'number' ? now : 0;}
+    else if (held !== undefined && now !== latch.frame) {
+      held.pressed = false;
+      held.value = 0;
+      latch.button = -1;
+      latch.released = true;
+    }
+    return [pad, null, null, null];
+  };
+  Object.assign(window, { __navPad: pad, __navPress: latch });
+  Object.defineProperty(navigator, 'getGamepads', { configurable: true, value: sample });
+  window.addEventListener('load', () => window.dispatchEvent(Object.assign(new Event('gamepadconnected'), { gamepad: pad })));
+}
+
+async function pressInPage([button, maxFrames]: readonly [number, number]): Promise<void> {
+  const { __navPad: pad, __navPress: latch } = window as unknown as StubWindow;
+  const target = pad.buttons[button];
+  if (target === undefined) {return;}
+  target.pressed = true;
+  target.value = 1;
+  Object.assign(latch, { button, frame: null, released: false });
+  await new Promise<void>((resolve) => {
+    const step = (left: number): void => {
+      if (latch.released || left === 0) {
+        target.pressed = false;
+        target.value = 0;
+        Object.assign(latch, { button: -1, frame: null, released: true });
+        resolve();
+        return;
+      }
+      requestAnimationFrame(() => step(left - 1));
+    };
+    requestAnimationFrame(() => step(maxFrames));
+  });
+}
+
 /** Replaces navigator.getGamepads with one standard pad (call before the page loads); returns its driver. */
 export async function stubGamepad(page: Page): Promise<PadDriver> {
-  await page.addInitScript(([buttons, axes]) => {
-    const pad = { id: 'nav-walk-stub', index: 0, connected: true, mapping: 'standard', timestamp: 0, axes: new Array<number>(axes).fill(0), buttons: Array.from({ length: buttons }, () => ({ pressed: false, touched: false, value: 0 })) };
-    Object.assign(window, { __navPad: pad });
-    Object.defineProperty(navigator, 'getGamepads', { configurable: true, value: () => [pad, null, null, null] });
-    window.addEventListener('load', () => window.dispatchEvent(Object.assign(new Event('gamepadconnected'), { gamepad: pad })));
-  }, [STANDARD_BUTTON_COUNT, AXIS_COUNT] as const);
+  await page.addInitScript(installStub, [STANDARD_BUTTON_COUNT, AXIS_COUNT] as const);
   return {
-    press: (button: number): Promise<void> => page.evaluate(async ([b, n]) => {
-      const pad = (window as unknown as { __navPad: StubPad }).__navPad;
-      const frames = (k: number): Promise<void> => new Promise((resolve) => {
-        const step = (left: number): void => {
-          if (left === 0) {
-            resolve();
-            return;
-          }
-          requestAnimationFrame(() => step(left - 1));
-        };
-        step(k);
-      });
-      const target = pad.buttons[b] ?? { pressed: false, value: 0 };
-      target.pressed = true;
-      target.value = 1;
-      await frames(n);
-      target.pressed = false;
-      target.value = 0;
-      await frames(n);
-    }, [button, STUB_FRAMES] as const),
+    press: (button: number): Promise<void> => page.evaluate(pressInPage, [button, PRESS_WAIT_FRAMES] as const),
     hold: (axis: number, value: number): Promise<void> => page.evaluate(([a, v]) => {
-      (window as unknown as { __navPad: StubPad }).__navPad.axes[a] = v;
+      (window as unknown as StubWindow).__navPad.axes[a] = v;
     }, [axis, value] as const),
   };
 }

@@ -2,6 +2,15 @@
 
 All notable changes to `@dloizides/game-e2e` are documented here.
 
+## 1.4.0
+
+GAME-E2E-PRESS-1 "Faster pad presses in game-e2e walks":
+
+- `stubGamepad().press` holds the button for exactly one sampled frame and resolves once a reader has seen it
+  released (`navigator.getGamepads()` calls latched to `document.timeline.currentTime`), instead of 3+3 fixed
+  `requestAnimationFrame` ticks. Under CPU load the old hold outlasted the 380 ms pad repeat delay and moved focus
+  twice, so the walk skipped rows. `STUB_FRAMES` is now 1; `PRESS_WAIT_FRAMES` (240) caps the wait when no reader polls.
+
 ## 1.3.0
 
 NAV-1 "Every game menu works with arrow keys and controller", phase 4 (canvas menus):
