@@ -2,6 +2,14 @@
 
 All notable changes to `@dloizides/game-e2e` are documented here.
 
+## 1.5.0
+
+TEXT-FIT-1 "UI text never overflows its box at 360x640 or desktop, in every state":
+
+- `expectTextFits(page, selector?, options?)`, `measureTextFit`, `readTextBoxes`, `summariseTextFit`, `textFitFindings`:
+  fails when visible text is wider/taller than its box or spills its parent, across named UI states. Trigger: Surge's
+  "Daily run" button with the "Completed today" badge ran past the button edge at 360x640 and 1280.
+
 ## 1.4.0
 
 GAME-E2E-PRESS-1 "Faster pad presses in game-e2e walks":

@@ -68,6 +68,12 @@ tolerant comparison of both images scaled to one size. Alpha is ignored in both.
   `visualViewport.width` and `clientWidth`. Morphe compared against `clientWidth`, Aurora against the visual
   viewport; the gate fails if either says the page scrolls sideways.
 
+- `expectTextFits(page, selector?, { states?, where?, tolerancePx? })` / `measureTextFit` / `readTextBoxes`:
+  TEXT-FIT-1 "UI text never overflows its box". Every visible element under `selector` (default `body *`)
+  that holds its own text fails when its `scrollWidth`/`scrollHeight` exceeds its box, or when its box
+  spills the block it sits in (scroll containers excepted). `states` walks named UI states (`enter(page)`)
+  and reports all of them in one assertion; a state that matched no text is a BLIND failure.
+
 ## Migration
 
 ### Aurora (`tests/design-ac/fixtures/`)

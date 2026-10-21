@@ -26,3 +26,7 @@ export { STUB_FRAMES, stubGamepad } from './gamepad-stub';
 export type { PadDriver } from './gamepad-stub';
 export { HOOK_WALK_SIZES, expectHookMenuWalkable, walkHookMenus } from './menu-walk-hook';
 export type { HookScreen, HookWalkOptions } from './menu-walk-hook';
+export { TEXT_FIT_TOLERANCE_PX, textFitFindings, summariseTextFit } from './text-fit-report';
+export type { TextBoxReading, TextFitFinding, StateTextFit } from './text-fit-report';
+export { TEXT_FIT_SELECTOR, readTextBoxes, measureTextFit, expectTextFits } from './text-fit';
+export type { TextFitState, TextFitOptions } from './text-fit';
