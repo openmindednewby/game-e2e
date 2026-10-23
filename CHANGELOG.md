@@ -2,6 +2,14 @@
 
 All notable changes to `@dloizides/game-e2e` are documented here.
 
+## 1.6.1
+
+GAME-INPUT-PROMPTS-1 "Every action bound, with device labels", D-GIP-9 "Widen AC-GIP-5":
+
+- `actionBindingFindings` reports `prompt missing` when a bound action's binding carries a prompt label but no visible
+  `data-gi-prompt` shows it (absent, hidden or zero-size chip). Before, such a chip passed. On touch the caller passes
+  bindings with `prompt: null`, so hidden chips still pass (AC-GIP-9).
+
 ## 1.6.0
 
 GAME-INPUT-PROMPTS-1 "Every action bound, with device labels":

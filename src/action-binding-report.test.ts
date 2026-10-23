@@ -62,8 +62,16 @@ describe('actionBindingFindings, prompt text (AC-GIP-5)', () => {
     expect(result.map((f) => f.why)).toEqual(['prompt shows "T" but the current binding is "Y"']);
   });
 
-  it('with a hidden prompt, does not compare its text', () => {
+  it('on keyboard or pad, with a missing or hidden prompt on a bound action, reports the missing chip', () => {
     const r = { ...bound, promptText: null };
+
+    const result = actionBindingFindings(r);
+
+    expect(result.map((f) => f.why)).toEqual(['prompt missing: the current binding is "LT" but no visible data-gi-prompt shows it']);
+  });
+
+  it('on touch, where the binding carries no prompt label, a hidden prompt passes', () => {
+    const r = { ...bound, promptText: null, expectedPromptText: null };
 
     const result = actionBindingFindings(r);
 

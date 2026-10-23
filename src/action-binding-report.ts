@@ -24,12 +24,14 @@ function bindingFindings(r: ActionReading, action: string): ActionBindingFinding
 }
 
 function promptFinding(r: ActionReading): ActionBindingFinding | null {
-  const comparable = r.promptText !== null && r.expectedPromptText !== null;
-  if (!comparable || r.promptText === r.expectedPromptText) {return null;}
+  if (r.expectedPromptText === null || r.promptText === r.expectedPromptText) {return null;}
+  if (r.promptText === null) {
+    return { name: r.name, why: `prompt missing: the current binding is "${r.expectedPromptText}" but no visible data-gi-prompt shows it` };
+  }
   return { name: r.name, why: `prompt shows "${String(r.promptText)}" but the current binding is "${String(r.expectedPromptText)}"` };
 }
 
-/** Every way one element breaks "every action bound": untagged, no key, no pad button, stale prompt. */
+/** Every way one element breaks "every action bound": untagged, no key, no pad button, stale or missing prompt. */
 export function actionBindingFindings(r: ActionReading): ActionBindingFinding[] {
   if (r.action === null) {return r.hasPointerHandler ? [{ name: r.name, why: 'pointer handler but no data-gi-action' }] : [];}
   const prompt = promptFinding(r);
