@@ -30,3 +30,5 @@ export { TEXT_FIT_TOLERANCE_PX, textFitFindings, summariseTextFit } from './text
 export type { TextBoxReading, TextFitFinding, StateTextFit } from './text-fit-report';
 export { TEXT_FIT_SELECTOR, readTextBoxes, measureTextFit, expectTextFits } from './text-fit';
 export type { TextFitState, TextFitOptions } from './text-fit';
+export { actionBindingFindings, summariseActionBinding } from './action-binding-report';
+export type { ActionReading, ActionBindingFinding } from './action-binding-report';
