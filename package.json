@@ -1,6 +1,6 @@
 {
   "name": "@dloizides/game-e2e",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Playwright helpers shared by the EisaiPollis browser games: phone/desktop device projects, a simulated browser-toolbar visible height, game-shell fit assertions, DOM control boxes and overlap math, exact or tolerant PNG pixel/region diff, and the 44x44 touch-target and no-horizontal-scroll mobile gates. Extracted from Aurora, Surge and Morphe.",
   "keywords": [
     "playwright",

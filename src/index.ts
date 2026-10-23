@@ -32,3 +32,5 @@ export { TEXT_FIT_SELECTOR, readTextBoxes, measureTextFit, expectTextFits } from
 export type { TextFitState, TextFitOptions } from './text-fit';
 export { actionBindingFindings, summariseActionBinding } from './action-binding-report';
 export type { ActionReading, ActionBindingFinding } from './action-binding-report';
+export { ACTION_ATTR, PROMPT_ATTR, POINTER_SELECTOR, ACTION_ROOT_SELECTOR, toActionReading, readActionElements, measureActionBinding, expectActionsBound } from './action-binding';
+export type { ActionBinding, ActionBindings, ActionElement, ActionBindingOptions } from './action-binding';

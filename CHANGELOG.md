@@ -2,6 +2,15 @@
 
 All notable changes to `@dloizides/game-e2e` are documented here.
 
+## 1.6.0
+
+GAME-INPUT-PROMPTS-1 "Every action bound, with device labels":
+
+- `expectActionsBound(page, bindings, options?)`, `measureActionBinding`, `readActionElements`, `toActionReading`,
+  `summariseActionBinding`, `actionBindingFindings`: fails when a visible clickable has no `data-gi-action`, a tagged
+  action has no key or pad binding, a visible `data-gi-prompt` shows a label other than the current binding, or zero
+  elements were read. Bindings are an input (`ActionBindings`), so the gate does not depend on a game-input release.
+
 ## 1.5.0
 
 TEXT-FIT-1 "UI text never overflows its box at 360x640 or desktop, in every state":
