@@ -1,5 +1,7 @@
 import type { ControlIdentity } from './boxes';
 
+export const WALK_ATTR = 'data-walk-id';
+
 export interface ScanArgs { focusSel: string; dialogSel: string; exempt: string[]; attr: string; rootAttr: string }
 
 export interface WalkScan {

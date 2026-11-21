@@ -4,7 +4,7 @@ import { controlName } from './boxes';
 import { type PadDriver, stubGamepad } from './gamepad-stub';
 import { DIRS, type Driver, driverFor } from './menu-walk-driver';
 import { openCdp, pointerOnlyControls } from './menu-walk-listeners';
-import { activeWalkId, controlValue, focusWalkId, rootOpen, scanScreen, type WalkScan } from './menu-walk-page';
+import { WALK_ATTR, activeWalkId, controlValue, focusWalkId, rootOpen, scanScreen, type WalkScan } from './menu-walk-page';
 import { WALK_INPUTS, type WalkInput, type WalkResult, renderWalk, walkFailed } from './menu-walk-report';
 
 export interface WalkScreen {
@@ -19,7 +19,6 @@ export interface WalkOptions { via?: readonly WalkInput[] }
 
 interface WalkEnv { pad: PadDriver | null; cdp: CDPSession | null }
 
-const WALK_ATTR = 'data-walk-id';
 const ROOT_ATTR = 'data-walk-root';
 const PROBE_ATTR = 'data-walk-probe';
 const PRESSES_PER_CONTROL = 4;
@@ -38,13 +37,12 @@ async function bfs(page: Page, driver: Driver, total: number): Promise<Set<numbe
   reached.add(start);
   const queue = [start];
   let presses = 0;
-  while (queue.length > 0 && presses < PRESSES_PER_CONTROL * total) {
+  const open = (): boolean => reached.size < total && presses < PRESSES_PER_CONTROL * total;
+  while (queue.length > 0 && open()) {
     const from = queue.shift() as number;
-    for (const d of DIRS) {
-      await focusId(page, from);
-      await driver.dir(d);
+    for (const d of DIRS.filter(open)) {
+      const at = await driver.move(from, d);
       presses += 1;
-      const at = await active(page);
       if (at !== null && !reached.has(at)) {
         reached.add(at);
         queue.push(at);

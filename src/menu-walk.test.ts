@@ -5,6 +5,8 @@ import { expectMenuWalkable, walkMenus, type WalkScreen } from './menu-walk';
 
 const FIXTURE_URL = 'http://nav-walk.test/';
 const WALK_TIMEOUT_MS = 120000;
+const PRESSES_PER_CONTROL = 4;
+const EXEMPT_FIXTURE_CONTROLS = 4;
 
 const engine = buildSync({
   stdin: { contents: "import { createMenuNav, createGamepadPoller } from '@dloizides/game-input'; Object.assign(window, { GI: { createMenuNav, createGamepadPoller } });", resolveDir: __dirname, loader: 'ts' },
@@ -98,5 +100,36 @@ describe('expectMenuWalkable', () => {
     const walk = expectMenuWalkable(page, [settings]);
 
     await expect(walk).rejects.toThrow(/unreached: .*divItem/);
+  });
+});
+
+function countCalls(page: Page): Map<string, number> {
+  const calls = new Map<string, number>();
+  const count = (name: string): void => { calls.set(name, (calls.get(name) ?? 0) + 1); };
+  const evaluate = page.evaluate.bind(page) as (...a: unknown[]) => Promise<unknown>;
+  const press = page.keyboard.press.bind(page.keyboard);
+  Object.assign(page, { evaluate: (...a: unknown[]) => { count(typeof a[0] === 'function' ? a[0].name : 'anon'); return evaluate(...a); } });
+  Object.assign(page.keyboard, { press: (key: string, o?: object) => { count('key'); return press(key, o); } });
+  return calls;
+}
+
+describe('walkMenus speed', () => {
+  it('with every control reached by arrow keys, stops pressing before 4 presses per control', async () => {
+    const page = await fixturePage(desktop());
+    const calls = countCalls(page);
+
+    await walkMenus(page, [settingsExempt], { via: ['keys'] });
+
+    expect(calls.get('key') ?? 0).toBeLessThan(PRESSES_PER_CONTROL * EXEMPT_FIXTURE_CONTROLS);
+  });
+
+  it('with the pad walk, focuses, presses and reads each step in one page round trip', async () => {
+    const page = await fixturePage(desktop());
+    const calls = countCalls(page);
+
+    const [result] = await walkMenus(page, [settingsExempt], { via: ['pad'] });
+
+    expect({ reached: result?.reached, activeReads: calls.get('activeWalkId') ?? 0, pressBelowCap: (calls.get('pressInPage') ?? 0) < PRESSES_PER_CONTROL * EXEMPT_FIXTURE_CONTROLS })
+      .toEqual({ reached: EXEMPT_FIXTURE_CONTROLS, activeReads: 1, pressBelowCap: true });
   });
 });

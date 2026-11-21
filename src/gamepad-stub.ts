@@ -1,7 +1,11 @@
 import type { Page } from '@playwright/test';
 
+export interface WalkFocus { attr: string; id: number }
+
 export interface PadDriver {
   press(button: number): Promise<void>;
+  /** Focuses walk control `focus.id`, presses `button` and returns the walk id focused after it, in one page round trip. */
+  move(button: number, focus: WalkFocus): Promise<number | null>;
   hold(axis: number, value: number): Promise<void>;
 }
 
@@ -36,10 +40,15 @@ function installStub([buttons, axes]: readonly [number, number]): void {
   window.addEventListener('load', () => window.dispatchEvent(Object.assign(new Event('gamepadconnected'), { gamepad: pad })));
 }
 
-async function pressInPage([button, maxFrames, idleFrames]: readonly [number, number, number]): Promise<void> {
+async function pressInPage([button, maxFrames, idleFrames, focus]: readonly [number, number, number, WalkFocus | null]): Promise<number | null> {
   const { __navPad: pad, __navPress: latch } = window as unknown as StubWindow;
+  const focused = (): number | null => {
+    const v = focus === null ? null : document.activeElement?.getAttribute(focus.attr) ?? null;
+    return v === null ? null : Number(v);
+  };
+  if (focus !== null) {document.querySelector<HTMLElement>(`[${focus.attr}="${focus.id}"]`)?.focus();}
   const target = pad.buttons[button];
-  if (target === undefined) {return;}
+  if (target === undefined) {return focused();}
   target.pressed = true;
   target.value = 1;
   Object.assign(latch, { button, frame: null, released: false, reads: 0 });
@@ -60,13 +69,15 @@ async function pressInPage([button, maxFrames, idleFrames]: readonly [number, nu
     };
     requestAnimationFrame(() => step(maxFrames));
   });
+  return focused();
 }
 
 /** Replaces navigator.getGamepads with one standard pad (call before the page loads); returns its driver. */
 export async function stubGamepad(page: Page): Promise<PadDriver> {
   await page.addInitScript(installStub, [STANDARD_BUTTON_COUNT, AXIS_COUNT] as const);
   return {
-    press: (button: number): Promise<void> => page.evaluate(pressInPage, [button, PRESS_WAIT_FRAMES, IDLE_RELEASE_FRAMES] as const),
+    press: async (button: number): Promise<void> => { await page.evaluate(pressInPage, [button, PRESS_WAIT_FRAMES, IDLE_RELEASE_FRAMES, null] as const); },
+    move: (button: number, focus: WalkFocus): Promise<number | null> => page.evaluate(pressInPage, [button, PRESS_WAIT_FRAMES, IDLE_RELEASE_FRAMES, focus] as const),
     hold: (axis: number, value: number): Promise<void> => page.evaluate(([a, v]) => {
       (window as unknown as StubWindow).__navPad.axes[a] = v;
     }, [axis, value] as const),
