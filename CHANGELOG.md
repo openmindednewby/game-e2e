@@ -2,6 +2,15 @@
 
 All notable changes to `@dloizides/game-e2e` are documented here.
 
+## 1.7.1
+
+D-BTV-E2E-3 "nav1 under 180 s by speeding up the walker" (tag v1.7.0 was pushed before the version bump and never published):
+
+- `walkMenus` / `expectMenuWalkable` stop the breadth-first walk once every control is reached; the remaining presses
+  could not change the result, so no assertion is dropped (slider, dialog focus and back checks run as before).
+- A pad walk step (focus, press, read focus) is one page round trip: new `PadDriver.move(button, { attr, id })`.
+  Profiled on a BeyondTheVoid title walk, pad presses were 75% of the walk time.
+
 ## 1.6.1
 
 GAME-INPUT-PROMPTS-1 "Every action bound, with device labels", D-GIP-9 "Widen AC-GIP-5":
