@@ -24,6 +24,15 @@ export async function readTextBoxes(page: Page, selector = TEXT_FIT_SELECTOR): P
       const r = el.getBoundingClientRect();
       return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden' && el.closest('[aria-hidden="true"]') === null;
     };
+    const clippedAway = (el: Element): boolean => {
+      for (let n: Element | null = el; n; n = n.parentElement) {
+        const s = getComputedStyle(n);
+        const r = n.getBoundingClientRect();
+        const tiny = r.width <= 1 && r.height <= 1 && (s.overflowX !== 'visible' || s.overflowY !== 'visible');
+        if (tiny || /^rect\(0px,? 0px,? 0px,? 0px\)$/.test(s.clip) || /^inset\((50|100)%/.test(s.clipPath)) {return true;}
+      }
+      return false;
+    };
     const scrolls = (el: Element): boolean => /auto|scroll/.test(getComputedStyle(el).overflowX + getComputedStyle(el).overflowY);
     const container = (el: Element): Element | null => {
       let p = el.parentElement;
@@ -35,7 +44,7 @@ export async function readTextBoxes(page: Page, selector = TEXT_FIT_SELECTOR): P
       const cls = typeof el.className === 'string' && el.className.trim() !== '' ? `.${el.className.trim().split(/\s+/).join('.')}` : '';
       return `${el.tagName.toLowerCase()}${id}${cls}`;
     };
-    const els = [...document.querySelectorAll(sel)].filter((el) => !(el instanceof SVGElement) && ownText(el) !== '' && shown(el));
+    const els = [...document.querySelectorAll(sel)].filter((el) => !(el instanceof SVGElement) && ownText(el) !== '' && shown(el) && !clippedAway(el));
     return els.flatMap((el) => {
       const parent = container(el);
       if (!parent || parent === document.body || parent === document.documentElement || scrolls(parent)) {return [];}
